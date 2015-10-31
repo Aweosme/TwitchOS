@@ -6,3 +6,4 @@ Thank you to these beautiful people who helped contribute:
 * sdsmith
 * Outlasted
 * ob6160
+* kieranellis
