@@ -7,6 +7,7 @@ This. And basically just this.
 
 # Contributors
 Thank you to these beautiful people who helped contribute:
+* apaszke
 * Arch-TK
 * DonkeyCore (Me!)
 * kieranellis
