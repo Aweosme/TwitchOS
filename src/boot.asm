@@ -23,9 +23,6 @@ stack_top:			; Stacks grow down
 section .text			; this is where stuff starts to happen
 global _start			; make our _start function public
 _start:				; start doing things
-	mov al, 0xFE
-	out 0x64, al		; we dont want anyone to use this anyways, Good one!
-
 	mov esp, stack_top
 	extern kernel_main	; tell the computer (*compiler) that we have a
 				; function called kernel_main but its not defined here
