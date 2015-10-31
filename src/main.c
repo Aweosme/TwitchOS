@@ -98,17 +98,17 @@ int kernel_main() {
 	printf("Puppy:\n\n");
 	printf("                          ,--.\n");
 	printf("                   _/ <`-'\n");
-	printf("               ,-.' \--\_\n");
-	printf("              ((`-.__\   )\n");
-	printf("               \`'    @ (_\n");
+	printf("               ,-.' \\--\\_\n");
+	printf("              ((`-.__\\   )\n");
+	printf("               \\`'    @ (_\n");
 	printf("               (        (_)\n");
 	printf("              ,'`-._(`-._/\n");
 	printf("           ,-'    )&&) ))\n");
 	printf("        ,-'      /&&&%-'\n");
 	printf("      ,' __  ,- {&&&&/\n");
-	printf("     / ,'  \|   |\&&'\\n");
-	printf("    (       |   |' \  `--.\n");
-	printf("(%--'\   ,--.\   `-.`-._)))\n");
+	printf("     / ,'  \\|   |\\&&'\\\n");
+	printf("    (       |   |' \\  `--.\n");
+	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
 	printf("Exiting...");
 
