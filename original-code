@@ -1,0 +1,352 @@
+/*
+
+ * Comment here! Please don't troll, we just want to have fun.
+
+ * FAQ:
+
+ * What are we doing? Making a 32-bit OS, complete with bootloader all in here!
+
+ * What langauges are we using? ASM (nasm) and C
+
+ * Can I join? Yes! Please comment your code to help others understand.
+
+
+ *** Welcome everybody from Twitch :) ***
+
+ * The way this works:
+ *   	c => compiled into asm
+ * 		asm => Gets compiled into binary
+ *   	binary => Read by the cpu to know what instructions to run and where
+ *     How does the CPU know the binary? Its because the assmebly is made directly into what that specifc CPU needs/knows. 
+ *     Hence why we are doing x86. x86 is the CPU instruction set that we are going to write for. 
+ *     Questions?
+    
+ *     will it be possible to let this system compile its own c code, or will it all have to be precompiled?
+ * 			- as far as I know, it has to be precompiled. Techincally you are putting on a 'dead' system. So it wouldn't make sense to have it compile itself (it couldn't).
+    
+ *     what would an 'alive' system be.
+ *     	- Something with an OS. So remember that a computer at its heart is just a CPU. All a CPU is is a giant state machine: Given these inputs, produce these outputs. The inputs are just binary to it.
+ *       	A system with an OS understand what we mean by 'write this character to the screen'. It knows we have to determine with character it is, then find what bit pattern needs to be set, then sets
+ *         that appropriate place in memory to that pattern, then informs the screen device to reload from the video memory. At the end of the day, all that end up being is thousands and thousands of instructions
+ *         the the CPU that essentially say "move this number from here to there. Add/sub/divide/multiply these numbers. Take the result, move it from here to there". That's it. So what we need to do make make higher
+ *         level instructions than 'move this number'. That's what I mean by dead/alive. A 'dead' system cannot be interacted with in any higher level way than assembly.
+    		
+ *  are you on IRC? we could talk about it there instead of in the comments. lol I have an english lit essay to do :p << lol
+ *  	- sadly no, and technically I have a paper to write right now. But its not Computer Science, so i dont really care lol. where are you from?
+ *  so it can only do what has been pre-programmed into it? Does it have some kind of lookup table? For the opcodes? This is going to get complicated quickly. The easy answer is yet. The long answer is its all made of fixed 'logic gates' which tranlate to what it needs to do for each opcode.
+ *         	- Think about it like this: hmmm.
+ *           	- Lets start with what a CPU is:
+ * 							- A CPU has three main parts - control, processing, memory
+ *               	So how does it work? Control tells it what to do, processing does it, and then it can put the result somewhere.
+ *                 Control looks for something called an 'opcode'. It basically has a bunch of slots that are waiting for either 0's or 1's of a fixed length. (I'm not sure how long x86 opcodes are, but lets say 16bits)
+ *                 So '00010000000011100' may be an opcode it sees. Without getting too specific, it could represent this:
+ *                 	'0001---------' means we are performing an 'add', '----000000------' would be the address of the first number to add, '----------000000' is the address of the second number to add.
+ *                 The CPU knows tons and TONS of these deferent opcodes. x86 has a MASSVIE manual about all of them. And all they do is 'do this operation with these values and put them here'.
+ *                 So you may be wondering, "Okay, how do I chain these opcodes together? Where does it get the opcodes? How do I make it do more than one?"
+ *         				OKAY BACK TO THIS GUYS.
+ *                Remember it gets an opcode, does somthing, puts result somewhere. Who is to say that it can't put the result into the opcode slot? And hence we get multiple opcodes that can be run. 
+ * 								There is something special called a PC (or Program counter). It is what the CPU uses to keep track of where to get it's instructions. So a typical CPU cycle might look like the following:
+ 										
+                    - load opcode from PC. increment PC to the next opcode address (ie. by 1 word). run the opcode, process, and save result in memory.
+ 										A good example of a CPU working would be a function call (in C). When a function gets turned into assembly, it is them put somewhere in working memory. 
+                    That memory has an address (what would be represented by a pointer in C). To make that function call, the CPU is given an opcode that says "change your PC counter to the address of the function
+                    in memory." SO on the next cycle, CPU reads its opcode from the PC (which now points to our function), and starts doing the first instruction of that function.
+ 
+ when the PC is incremented how does it know 'where' to increment to if you get what I mean. Do you want to right answer of the easy answer?
+ 	- easy: all the opcodes (ill refer to them as instructions now) are layed out in memory in order, one after another. So when the PC is incrememnted by one, it just points to the next instruction.
+  - hard(ish): we are the peopl that write the assembly, and have it compiled down into a binary. When the compiler compiles our program, it makes sure to lay out the binary in a very specific way so all of our
+  	instructions that need to execute one after another are in order. when we write the assembly "call myFunction", the symbol 'myFunction' gets replaced with a memory address. Specifically, the memory address of
+    the function relative to the compiled binary. In this way, we can load our binary into a machines memory, turn it on, and have it execute properly. 
+    	*It should be noted that there is a specific address that is always executed by the CPU first when the machine is turned on, but i have no idea what it is. Its the BIOS chip that tell the PCU to run this first
+      instruction.
+ */
+
+---- kernel.c ----
+
+#include <stddef.h> /* Almost forgot to add these essential headers! */
+#include <stdint.h> /* We can include these because they come with the compiler */
+
+/* Hardware text mode color constants. */
+enum vga_color { /* Why does an _ENUM_ need = 0x0..0xF, it's guaranteed to start at 0 and increment by 1*/
+	COLOR_BLACK,
+	COLOR_DARK_BLUE,
+	COLOR_DARK_GREEN,
+	COLOR_BLUE,
+	COLOR_DARK_RED,
+	COLOR_PURPLE,
+	COLOR_ORANGE,
+	COLOR_LIGHT_GRAY,
+	COLOR_DARK_GRAY,
+	COLOR_LIGHT_BLUE,
+	COLOR_GREEN,
+	COLOR_AQUA,
+	COLOR_RED,
+	COLOR_MAGENTA,
+	COLOR_YELLOW,
+	COLOR_WHITE,
+  COLOR_RAINBOW = COLOR_BLUE | COLOR_DARK_RED | COLOR_YELLOW /* lol */
+};
+
+static const size_t VGA_WIDTH = 80;
+static const size_t VGA_HEIGHT = 25;
+
+uint8_t make_color(enum vga_color fg, enum vga_color bg) { /* This is how we can make our awesome 16 terminal colors yay */
+	return fg | bg << 4;
+}
+ 
+uint16_t make_vgaentry(char c, uint8_t color) {
+	uint16_t c16 = c;
+	uint16_t color16 = color;
+	return c16 | color16 << 8;
+}
+ 
+size_t strlen(const char* str) { /* There are no standard libraries, we do everything ourselves yay */
+	size_t ret = 0;
+	while(str[ret] != 0)
+		ret++;
+	return ret;
+}
+
+size_t terminal_row;
+size_t terminal_column;
+uint8_t terminal_color;
+uint16_t* terminal_buffer;
+
+void initialize() {
+	terminal_row = 0;
+	terminal_column = 0;
+	terminal_color = make_color(COLOR_LIGHT_GRAY, COLOR_BLACK);
+  /* 0xB8000 is a VGA text buffer */
+	terminal_buffer = (uint16_t*) 0xB8000;
+	for(size_t y = 0; y < VGA_HEIGHT; y++) {
+		for(size_t x = 0; x < VGA_WIDTH; x++) {
+			const size_t index = y * VGA_WIDTH + x;
+			terminal_buffer[index] = make_vgaentry(' ', terminal_color);
+		}
+	}
+}
+ 
+void setcolor(uint8_t color) {
+	terminal_color = color;
+}
+ 
+void putentryat(char c, uint8_t color, size_t x, size_t y) {
+	const size_t index = y * VGA_WIDTH + x;
+	terminal_buffer[index] = make_vgaentry(c, color);
+}
+ 
+void putchar(char c) {
+	if(c == '\n') {
+		terminal_row++;
+		terminal_column = 0;
+	} else {
+		putentryat(c, terminal_color, terminal_column, terminal_row);
+		if(++terminal_column == VGA_WIDTH) {
+			terminal_column = 0;
+			if(++terminal_row == VGA_HEIGHT) {
+				terminal_row = 0;
+			}
+		}
+	}
+}
+ 
+void printf(const char* data) {
+	size_t datalen = strlen(data);
+	for(size_t i = 0; i < datalen; i++)
+		putchar(data[i]);
+}
+
+int kernel_main() {
+  initialize();
+
+  printf("Hello, World!\n\n");
+  printf("Puppy:\n\n");
+  printf("                          ,--.\n");
+  printf("                   _/ <`-'\n");
+  printf("               ,-.' \--\_\n");
+  printf("              ((`-.__\   )\n");
+  printf("               \`'    @ (_\n");
+  printf("               (        (_)\n");
+  printf("              ,'`-._(`-._/\n");
+  printf("           ,-'    )&&) ))\n");
+  printf("        ,-'      /&&&%-'\n");
+  printf("      ,' __  ,- {&&&&/\n");
+  printf("     / ,'  \|   |\&&'\\n");
+  printf("    (       |   |' \  `--.\n");
+  printf("(%--'\   ,--.\   `-.`-._)))\n");
+  printf(" `---'`-/__)))`-._)))\n\n");
+  printf("Exiting...");
+
+  /*
+   * ^^ printf not implemented? It is, look above, lolk :P
+   * is putchar implemented? It is, look above xD
+   * right xd  FEELS LIKE TOVALDS xD
+   * #ForgettingTheCodeAlreadyExists
+   * well acutally at least in theory at some point linux kernel and in general linux organization of system started to be overcomplicated comparing
+   * to eg. Minix that's why it's not used as good example on Unis, clear UNIX was more straight forward. 
+   * Minix kernel takes like 20 seconds to compile and it's made from like... 20 .c files
+   *
+   * how are you going to display the terminal?
+	 * there's something called character device, i dunno how it exactly works but long story short - OS is sending characters, 
+   * not pixels, we don't bother with font or stuff like that
+   * I see, can it understand the colours? I guess so, but Minix at least doesn't handle colors properly in terminal
+   * But duh it's 1998 OS, maybe then VGA standard didn't support colors yet 
+   * Ok, I see. The address 0xB8000 used for terminal buffer is a VGA text buffer
+   *
+   * I guess it's VGA standard to support characters
+   *
+   * One does not simply work is how the fuck bunch of random people didn't destroy everything yet? It's against rules of internetz
+   * I have backups anyway, it's just really nice that nobody has decided to completely be a troll yet
+   * (well I mean there were trolls earlier but they're gone now)
+   * 
+   * Code is looking amazing guys lol
+   * What code? :3
+   *
+   * We don't have character device support yet do we?
+   *
+   * Check this out:
+   * There are interrupts that might do that
+   * https://en.wikipedia.org/wiki/INT_10H
+   * This is worth reading too:
+	 * http://mikeos.sourceforge.net/write-your-own-os.html
+   * He implements an OS in 30 lines and it can print output!!
+   
+   * If it's not zero, we call int 10h (interrupt our code and go to the BIOS), which reads the value in the AH register (0Eh)
+   * we set up before. Ah, says the BIOS - 0Eh in the AH register means "print the character in the AL register to the screen!". 
+   *
+   * I might actually go ahead and try to compile this.
+   * Also, we should join a freenode IRC channel.
+   * Yeah compile it, I really want to see how it works (upload it to imgur and paste a link here or something)
+   * I'm gonna post this to Reddit later lol (but I'm gonna do it when we finish pretty much)
+   * Anyone compiling it? 
+   
+   is there a channel we can join? That would be fuN :) don't have a mic :s
+  * I've never done sessions like this but it's really fun ! xD >>>>>>Can anybody hear me?<<<<<< There's an option to do video/voice chat on the right-hand side of this website apparently
+  */
+  
+  /* Verdict:
+  can you tell me the steps / tools you used to run it too? also can we make an IRC or decide on a channel
+   * So after some work, I got it to compile. And... (Let me upload the image)
+   * WOHOOO
+   * I'm gonna compile it too
+   * Whoops.
+   * https://ptpb.pw/GYKO.png There you go.
+   * Wow, this is awesome
+   * :D
+   * SICK MAN ! :D
+   * The puppy had lots of backslashes.
+   * I had to escape these, also, I didn't know which assembler the boot.asm was for so I quickly wrote my own (identical version but for as) And initialise() never got called
+   * I'm proud of you, random internet people. We did well.
+   * Note to self: try not to delete the code when copying <-- wanted to try compiling it :P It's okay lol I've been making backups. I'm a random person who trys to program stuff but never gets any ideas
+   * Who is the person writing this? What is your background?which one
+   *  Me, the guy who compiled and pasted the link, I didn't write most of this, but I've written an OS similar to this before. I'm a software developer.
+   *  Oh, and I run archlinux (me too!). I'm 19 << Thank you.
+   * The code is from http://wiki.osdev.org/Bare_Bones < I thought it looked familiar :P
+   * Nice, I'm a system engineer / security researcher :)  << Thank you
+   * I'm a CS and Mathematics student
+   * I'm a CS student 21y/o
+   * I'm 15 - Okay we did really good guys I'm pretty proud
+   * Do we want to keep developing this? We can github it. Yeah :D
+   * I'll make the project hold on : Okay, my github is Outlasted :), How long did it last?, sorry..... longer then you xD
+   * https://github.com/DonkeyCore/TwitchOS <-- Gonna start putting code in it, make pull requests and do stuff lol
+   * The next step of this project would be to actually organize it a bit. Maybe kbuild? Or maybe kbuild is overkill :P
+   * Organization would be nice, so how are we gonna organize the file structure? src folder would be obvious
+   * src, build, docs, arch/ (for the asm)?
+   * Yeah okay
+   
+   
+   * Put the names of everyone who contributed in commit message or readme :)
+   * Will do, put all your names or aliases that you want to go by below:
+   * DonkeyCore
+   * sdsmith
+   * Outlasted
+   * ob6160
+   * kieranellis (github) - i havn't really done much...
+   * EliteTK (github account)
+   * Alrighty will add you guys to the readme nice :)
+   * Thanks you.
+   * can we get an Irc set up now?
+   You guys are awesome. You too :)
+   https://webchat.freenode.net/ #asmosdev
+   * Readme updated
+   * Let's talk in IRC and keep these comments clean ok
+   */
+  
+  
+
+  
+  return 0;
+
+}  
+
+
+---- boot.asm ----
+
+section .boot												; flags for all our multibooting needs
+MBALIGN 	equ 1<<0									;? Is this just convention to define this way? Yeah it is just how everyone does it
+MEMINFO		equ 1<<1
+FLAGS 		equ MBALIGN | MEMINFO
+MAGIC			equ 0x1BADB002
+CHECKSUM	equ -(MAGIC + FLAGS)
+
+																		; Multiboot Header - For bootloaders supporting multiboot (Contents defined above)
+section .multiboot  								; give this stuff its own section 
+align 4
+  dd	MAGIC
+  dd	FLAGS
+  dd 	CHECKSUM
+
+section .stack, nx									; A stack (We need one, otherwise the C won't work :( )!
+align 4															; We might eventually want a bigger stack.
+stack_bottom:
+resb 8192
+stack_top:													; Stacks grow down
+
+section .text												; this is where stuff starts to happen
+global _start									 			; make our _start function public                                                           
+_start:															; start doing things
+  mov al, 0xFE
+  out 0x64, al 											; we dont want anyone to use this anyways, Good one!
+
+	mov esp, stack_top
+  extern kernel_main								; tell the computer (*compiler) that we have a function called kernel_main but its not defined here
+    																; Shouldn't this extern preferrably be at the top of the file?
+  call kernel_main									; call kernel_main from main.c
+  
+  cli																; disable interrupts
+
+.halt
+  hlt																; wait for an interrupt (not gonna happen)
+  jmp .halt													; just in case, jump back to the halt label
+
+//EOF
+
+---- boot.s ---- (Alternative for use with as)
+
+.set	flags, 0b11
+.set	magic, 0x1BADB002
+.set	checksum, -(magic + flags)
+
+.section .multiboot_header
+.align	4
+.long	magic
+.long	flags
+.long	checksum
+
+.section .basic_stack, "aw", @nobits
+stack_bottom:
+.skip 16384
+stack_top:
+
+.section .text
+.global _start
+_start:
+	movl	$stack_top, %esp
+	call	kernel_main
+
+	cli
+	hlt
+.halt:
+	jmp	.halt
+
+.size _start, . - _start
