@@ -30,6 +30,6 @@ _start:				; start doing things
 
 	cli			; disable interrupts
 
-.halt
+.halt:
 	hlt			; wait for an interrupt (not gonna happen)
 	jmp .halt		; just in case, jump back to the halt label
