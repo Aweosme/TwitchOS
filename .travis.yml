@@ -1,0 +1,14 @@
+language: cpp
+compiler:
+  - gcc
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq
+install:
+  - sudo apt-get install nasm gcc-multilib grub-common xorriso
+script:
+  - make
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/f81ab75718a4086bd0e8
