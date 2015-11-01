@@ -38,6 +38,12 @@ void putentryat(char c, uint8_t color, size_t x, size_t y) {
 	terminal_buffer[index] = make_vgaentry(c, color);
 }
 
+void newline(unsigned int num) {
+	for(int i = 0; i < num; i++) {
+		printf("\n");
+	}
+}
+
 void clearscreen() {
 	for(size_t i  = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
 		terminal_buffer[i] = terminal_color;
