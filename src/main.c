@@ -1,5 +1,7 @@
 #include <stddef.h> /* Almost forgot to add these essential headers! */
 #include <stdint.h> /* We can include these because they come with the compiler */
+#define true 1
+#define false 0
 
 /* Hardware text mode color constants. */
 enum vga_color { /* Why does an _ENUM_ need = 0x0..0xF, it's guaranteed to start at 0 and increment by 1*/
@@ -25,6 +27,7 @@ enum vga_color { /* Why does an _ENUM_ need = 0x0..0xF, it's guaranteed to start
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
 
+
 uint8_t make_color(enum vga_color fg, enum vga_color bg) { /* This is how we can make our awesome 16 terminal colors yay */
 	return fg | bg << 4;
 }
@@ -42,10 +45,45 @@ size_t strlen(const char* str) { /* There are no standard libraries, we do every
 	return ret;
 }
 
+void *memcpy(void *dest, const void *src, int count)
+{
+    const char *sp = (const char *)src;
+    char *dp = (char *)dest;
+    for(; count != 0; count--) *dp++ = *sp++;
+    return dest;
+}
+
+void *memset(void *dest, char val, int count)
+{
+    char *temp = (char *)dest;
+    for( ; count != 0; count--) *temp++ = val;
+    return dest;
+}
+
+void* memmove(void* dest, const void* src, size_t num) {
+	if (dest > src) {
+		uint8_t* src_8 = ((uint8_t*) src) + num - 1;
+		uint8_t* dest_8 = ((uint8_t*) dest) + num - 1;
+		while (num--) {
+			*dest_8-- = *src_8--;
+		}
+
+	} else {
+		uint8_t* src_8 = (uint8_t*) src;
+		uint8_t* dest_8 = (uint8_t*) dest;
+		while (num--) {
+			*dest_8++ = *src_8++;
+		}
+	}
+
+	return dest;
+}
+
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
+
 
 void initialize() {
 	terminal_row = 0;
@@ -70,6 +108,36 @@ void putentryat(char c, uint8_t color, size_t x, size_t y) {
 	terminal_buffer[index] = make_vgaentry(c, color);
 }
 
+void clearscreen() {
+	for(size_t i  = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
+		terminal_buffer[i] = terminal_color;
+	}
+	terminal_row = 0;
+	terminal_column = 0;
+}
+
+void setcursorpos(int x, int y) {
+	terminal_row = x;
+	terminal_column = y;
+}
+
+void scrolldown() {
+	memcpy(terminal_buffer, terminal_buffer + 80, sizeof(uint16_t) * VGA_WIDTH * (VGA_HEIGHT-1));
+	for(int i = 80*24; i < (80*25); i++) {
+		terminal_buffer[i] = make_vgaentry(' ', terminal_color);
+	}
+}
+
+
+void scrollup() {
+	memmove(terminal_buffer + 80, terminal_buffer, sizeof(uint16_t) * 80 * 24);
+	for(int i = 0; i < 80; i++) {
+		terminal_buffer[i] = make_vgaentry(' ', terminal_color);
+	}
+}
+
+
+
 void putchar(char c) {
 	if(c == '\n') {
 		terminal_row++;
@@ -85,6 +153,13 @@ void putchar(char c) {
 	}
 }
 
+//THIS IS BAD :(
+void sleep(unsigned long delay) {
+	for(unsigned long i = 0; i < delay; i++) {
+		__asm__ __volatile__ ("nop");
+	}
+}
+
 void printf(const char* data) {
 	size_t datalen = strlen(data);
 	for(size_t i = 0; i < datalen; i++)
@@ -93,7 +168,6 @@ void printf(const char* data) {
 
 int kernel_main() {
 	initialize();
-
 	printf("Hello, World!\n\n");
 	printf("Puppy:\n\n");
 	printf("                          ,--.\n");
@@ -110,102 +184,32 @@ int kernel_main() {
 	printf("    (       |   |' \\  `--.\n");
 	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
+//	clearscreen();
+
+	int count = 0;
+while(true) {
+
+
+	while(count < 5) {
+		sleep(100000000);
+		scrolldown();
+		count++;
+
+	}
+
+	while(count < 10) {
+		sleep(100000000);
+		scrollup();
+		count++;
+
+	}
+
+	if(count % 10 == 0) {
+		count = 0;
+	}
+
+}
 	printf("Exiting...");
-
-	/*
-	 * ^^ printf not implemented? It is, look above, lolk :P
-	 * is putchar implemented? It is, look above xD
-	 * right xd  FEELS LIKE TOVALDS xD
-	 * #ForgettingTheCodeAlreadyExists
-	 * well acutally at least in theory at some point linux kernel and in general linux organization of system started to be overcomplicated comparing
-	 * to eg. Minix that's why it's not used as good example on Unis, clear UNIX was more straight forward.
-	 * Minix kernel takes like 20 seconds to compile and it's made from like... 20 .c files
-	 *
-	 * how are you going to display the terminal?
-	 * there's something called character device, i dunno how it exactly works but long story short - OS is sending characters,
-	 * not pixels, we don't bother with font or stuff like that
-	 * I see, can it understand the colours? I guess so, but Minix at least doesn't handle colors properly in terminal
-	 * But duh it's 1998 OS, maybe then VGA standard didn't support colors yet
-	 * Ok, I see. The address 0xB8000 used for terminal buffer is a VGA text buffer
-	 *
-	 * I guess it's VGA standard to support characters
-	 *
-	 * One does not simply work is how the fuck bunch of random people didn't destroy everything yet? It's against rules of internetz
-	 * I have backups anyway, it's just really nice that nobody has decided to completely be a troll yet
-	 * (well I mean there were trolls earlier but they're gone now)
-	 *
-	 * Code is looking amazing guys lol
-	 * What code? :3
-	 *
-	 * We don't have character device support yet do we?
-	 *
-	 * Check this out:
-	 * There are interrupts that might do that
-	 * https://en.wikipedia.org/wiki/INT_10H
-	 * This is worth reading too:
-	 * http://mikeos.sourceforge.net/write-your-own-os.html
-	 * He implements an OS in 30 lines and it can print output!!
-
-	 * If it's not zero, we call int 10h (interrupt our code and go to the BIOS), which reads the value in the AH register (0Eh)
-	 * we set up before. Ah, says the BIOS - 0Eh in the AH register means "print the character in the AL register to the screen!".
-	 *
-	 * I might actually go ahead and try to compile this.
-	 * Also, we should join a freenode IRC channel.
-	 * Yeah compile it, I really want to see how it works (upload it to imgur and paste a link here or something)
-	 * I'm gonna post this to Reddit later lol (but I'm gonna do it when we finish pretty much)
-	 * Anyone compiling it?
-
-	 is there a channel we can join? That would be fuN :) don't have a mic :s
-	 * I've never done sessions like this but it's really fun ! xD >>>>>>Can anybody hear me?<<<<<< There's an option to do video/voice chat on the right-hand side of this website apparently
-	 */
-
-	/* Verdict:
-	   can you tell me the steps / tools you used to run it too? also can we make an IRC or decide on a channel
-	 * So after some work, I got it to compile. And... (Let me upload the image)
-	 * WOHOOO
-	 * I'm gonna compile it too
-	 * Whoops.
-	 * https://ptpb.pw/GYKO.png There you go.
-	 * Wow, this is awesome
-	 * :D
-	 * SICK MAN ! :D
-	 * The puppy had lots of backslashes.
-	 * I had to escape these, also, I didn't know which assembler the boot.asm was for so I quickly wrote my own (identical version but for as) And initialise() never got called
-	 * I'm proud of you, random internet people. We did well.
-	 * Note to self: try not to delete the code when copying <-- wanted to try compiling it :P It's okay lol I've been making backups. I'm a random person who trys to program stuff but never gets any ideas
-	 * Who is the person writing this? What is your background?which one
-	 *  Me, the guy who compiled and pasted the link, I didn't write most of this, but I've written an OS similar to this before. I'm a software developer.
-	 *  Oh, and I run archlinux (me too!). I'm 19 << Thank you.
-	 * The code is from http://wiki.osdev.org/Bare_Bones < I thought it looked familiar :P
-	 * Nice, I'm a system engineer / security researcher :)  << Thank you
-	 * I'm a CS and Mathematics student
-	 * I'm a CS student 21y/o
-	 * I'm 15 - Okay we did really good guys I'm pretty proud
-	 * Do we want to keep developing this? We can github it. Yeah :D
-	 * I'll make the project hold on : Okay, my github is Outlasted :), How long did it last?, sorry..... longer then you xD
-	 * https://github.com/DonkeyCore/TwitchOS <-- Gonna start putting code in it, make pull requests and do stuff lol
-	 * The next step of this project would be to actually organize it a bit. Maybe kbuild? Or maybe kbuild is overkill :P
-	 * Organization would be nice, so how are we gonna organize the file structure? src folder would be obvious
-	 * src, build, docs, arch/ (for the asm)?
-	 * Yeah okay
-
-
-	 * Put the names of everyone who contributed in commit message or readme :)
-	 * Will do, put all your names or aliases that you want to go by below:
-	 * DonkeyCore
-	 * sdsmith
-	 * Outlasted
-	 * ob6160
-	 * kieranellis (github) - i havn't really done much...
-	 * EliteTK (github account)
-	 * Alrighty will add you guys to the readme nice :)
-	 * Thanks you.
-	 * can we get an Irc set up now?
-	 You guys are awesome. You too :)
-	 https://webchat.freenode.net/ #asmosdev
-	 * Readme updated
-	 * Let's talk in IRC and keep these comments clean ok
-	 */
 
 
 
