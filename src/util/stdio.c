@@ -15,11 +15,13 @@ void putchar(char c) {
 	}
 }
 
-unsigned int abs(int num) {
-	unsigned int result;
-	int const mask = num >> sizeof(int) * 0;
-	result = (num + mask) ^ mask;
-	return result;
+//lol
+int abs(int num) {
+	if(num < 0) {
+		return -num;
+	} else {
+		return num;
+	}
 }
 
 char* itoa(int num, char* ret, int base) {
