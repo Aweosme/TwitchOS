@@ -14,7 +14,7 @@ void sleep(unsigned long delay) {
 }
 
 int kernel_main() {
-    init_gdt();
+	init_gdt();
 	init_video();
 
 	printf("Hello, World!\n\n");
