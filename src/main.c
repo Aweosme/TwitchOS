@@ -2,7 +2,7 @@
 #include "util/stdio.h"
 #include "descriptor_tables/gdt.h"
 #include "descriptor_tables/idt.h"
-#include "video.h"
+#include "terminal.h"
 
 #define true 1
 #define false 0

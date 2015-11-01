@@ -1,5 +1,5 @@
 #include "string.h"
-#include "../video.h" //In the future none of these functions should access the video buffer directly
+#include "../terminal.h" //In the future none of these functions should access the video buffer directly
 
 #ifndef TWITCHOS_STDIO_H
 #define TWITCHOS_STDIO_H

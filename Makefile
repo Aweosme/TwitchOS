@@ -29,7 +29,7 @@ _DEPS =
 _OBJS = \
 	main.o \
 	boot.o \
-	video.o \
+	terminal.o \
 	descriptor_tables/gdt.o \
 	descriptor_tables/gdt_flush.o \
 	descriptor_tables/idt.o \
