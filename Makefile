@@ -28,7 +28,10 @@ _DEPS =
 
 _OBJS = \
 	main.o \
-	boot.o
+	boot.o \
+	video.o \
+	util/string.o \
+	util/stdio.o
 
 ### Build prep
 DEPS = $(patsubst %,$(SRC_DIR)/%,$(_DEPS))
@@ -39,12 +42,13 @@ all: setup_iso
 
 # any .o file from .c file created from the .c file and the list of dependants
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
+	@mkdir -p $(dir $@)
 	$(CC) $(CCARCH) -c -o $@ $< $(CFLAGS)
 
 # any .o file from .asm file
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
+	@mkdir -p $(dir $@)
 	$(ASMC) -f $(ASMCARCH) -o $@ $^
-
 
 kernal.bin: $(OBJS)
 	$(CC) $(CCARCH) -o $(BUILD_DIR)/$@ $^ $(CLFLAGS)
