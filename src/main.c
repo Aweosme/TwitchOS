@@ -64,6 +64,25 @@ void *memset(void *dest, char val, int count)
     return dest;
 }
 
+void* memmove(void* dest, const void* src, size_t num) {
+	if (dest > src) {
+		uint8_t* src_8 = ((uint8_t*) src) + num - 1;
+		uint8_t* dest_8 = ((uint8_t*) dest) + num - 1;
+		while (num--) {
+			*dest_8-- = *src_8--;
+		}
+
+	} else {
+		uint8_t* src_8 = (uint8_t*) src;
+		uint8_t* dest_8 = (uint8_t*) dest;
+		while (num--) {
+			*dest_8++ = *src_8++;
+		}
+	}
+
+	return dest;
+}
+
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
@@ -110,8 +129,17 @@ void scrolldown() {
 	memcpy(terminal_buffer, terminal_buffer + 80, sizeof(uint16_t) * VGA_WIDTH * (VGA_HEIGHT-1));
 	for(int i = 80*24; i < (80*25); i++) {
 		terminal_buffer[i] = make_vgaentry(' ', terminal_color);
-	}	
+	}
 }
+
+
+void scrollup() {
+	memmove(terminal_buffer + 80, terminal_buffer, sizeof(uint16_t) * 80 * 24);
+	for(int i = 0; i < 80; i++) {
+		terminal_buffer[i] = make_vgaentry(' ', terminal_color);
+	}
+}
+
 
 
 void putchar(char c) {
@@ -161,15 +189,30 @@ int kernel_main() {
 	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
 //	clearscreen();
+
 	int count = 0;
+while(true) {
+
+
 	while(count < 5) {
 		sleep(100000000);
 		scrolldown();
 		count++;
-	
+
 	}
 
-	clearscreen();
+	while(count < 10) {
+		sleep(100000000);
+		scrollup();
+		count++;
+
+	}
+
+	if(count % 10 == 0) {
+		count = 0;
+	}
+
+}
 	printf("Exiting...");
 
 
