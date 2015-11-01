@@ -1,4 +1,4 @@
-#include "video.h"
+#include "terminal.h"
 //#include "util/string.h"
 
 void init_video_with_colors(enum vga_color fg, enum vga_color bg) {

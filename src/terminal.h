@@ -1,7 +1,7 @@
 #include "util/string.h"
 
-#ifndef TWITCHOS_VIDEO_H
-#define TWITCHOS_VIDEO_H
+#ifndef TWITCHOS_TERMINAL_H
+#define TWITCHOS_TERMINAL_H
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -65,4 +65,4 @@ void scrolldown();
 
 void scrollup();
 
-#endif //TWITCHOS_VIDEO_H
+#endif //TWITCHOS_TERMINAL_H
