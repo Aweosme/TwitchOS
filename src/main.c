@@ -34,14 +34,13 @@ int kernel_main() {
 	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
 //	clearscreen();
-
+	char* thing;
+	itoa(42, thing, 10);
+	printf(thing);
 	int count = 0;
 	while (true) {
 
 		while (count < 5) {
-			sleep(100000000);
-			scrolldown();
-			count++;
 
 		}
 
