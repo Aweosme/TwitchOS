@@ -13,7 +13,11 @@ void sleep(unsigned long delay) {
 }
 
 int kernel_main() {
-	init_video();
+
+	while(true) {
+		init_video();
+	}
+/*
 
 	printf("Hello, World!\n\n");
 	printf("Puppy:\n\n");
@@ -32,29 +36,7 @@ int kernel_main() {
 	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
 //	clearscreen();
-
-	int count = 0;
-	while (true) {
-
-		while (count < 5) {
-			sleep(100000000);
-			scrolldown();
-			count++;
-
-		}
-
-		while (count < 10) {
-			sleep(100000000);
-			scrollup();
-			count++;
-
-		}
-
-		if (count % 10 == 0) {
-			count = 0;
-		}
-
-	}
+*/
 	printf("Exiting...");
 
 

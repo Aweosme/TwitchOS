@@ -79,4 +79,4 @@ clean:
 	@rm -rf $(OBJ_DIR)
 
 run: setup_iso
-	@qemu-system-i386 -m 256M -cdrom $(ISO_DIR)/$(OSNAME).iso -k en-us
+	@qemu-system-i386 -m 512M -cdrom $(ISO_DIR)/$(OSNAME).iso -k en-us

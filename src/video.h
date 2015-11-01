@@ -42,6 +42,9 @@ void init_video();
  */
 void init_video_with_colors(enum vga_color, enum vga_color);
 
+static void putpixel(unsigned char* screen, int x,int y, int color);
+
+
 /**
  * Set terminal colors using vga_color enum
  */
