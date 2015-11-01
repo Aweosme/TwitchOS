@@ -15,6 +15,13 @@ void putchar(char c) {
 	}
 }
 
+void printf(const char *data) {
+	size_t datalen = strlen(data);
+
+	for (size_t i = 0; i < datalen; i++)
+		putchar(data[i]);
+}
+
 //lol
 int abs(int num) {
 	if(num < 0) {
@@ -25,6 +32,12 @@ int abs(int num) {
 }
 
 char* itoa(int num, char* ret, int base) {
+	//Base numbers can only be between 2 and 16, inclusive
+	if(base < 2 || base > 16) {
+		printf("Error: Base out of range");
+		return NULL; //NOTE(DonkeyCore): is there a way to notify the user of the errno instead of using printf and returning null? We could use the errno variable but EliteTK doesn't like that
+	}
+	
 	const char lookup[] = "0123456789ABCDEF";
 	//If it's negative append -
 	if(num < 0) {
@@ -40,6 +53,7 @@ char* itoa(int num, char* ret, int base) {
 		count = count / base;
 
 	}
+	
 	//Go back over the string until we reach the start again := num % base
 	while(num) {
 
@@ -50,11 +64,4 @@ char* itoa(int num, char* ret, int base) {
 
 	return ret;
 
-}
-
-void printf(const char *data) {		
-	size_t datalen = strlen(data);
-
-	for (size_t i = 0; i < datalen; i++)
-		putchar(data[i]);
 }
