@@ -1,5 +1,6 @@
 #include "util/string.h"
 #include "util/stdio.h"
+#include "mem/gdt.h"
 #include "video.h"
 
 #define true 1
@@ -13,6 +14,7 @@ void sleep(unsigned long delay) {
 }
 
 int kernel_main() {
+	init_gdt();
 	init_video();
 
 	printf("Hello, World!\n\n");
