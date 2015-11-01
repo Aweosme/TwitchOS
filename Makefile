@@ -35,6 +35,12 @@ _OBJS = \
 	util/string.o \
 	util/stdio.o
 
+define GRUB_CFG
+menuentry "$(OSNAME)" {
+	multiboot /boot/kernal.bin
+}
+endef
+
 ### Build prep
 DEPS = $(patsubst %,$(SRC_DIR)/%,$(_DEPS))
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
@@ -62,6 +68,7 @@ setup_build_directory:
 
 kernal: setup_build_directory kernal.bin
 
+export GRUB_CFG
 setup_iso: setup_build_directory kernal.bin
 	@if [ ! -d "$(ISO_DIR)" ]; then mkdir $(ISO_DIR); fi
 	@if [ ! -d "$(BOOT_DIR)" ]; then mkdir $(BOOT_DIR); fi
@@ -69,7 +76,7 @@ setup_iso: setup_build_directory kernal.bin
 
 	cp $(BUILD_DIR)/kernal.bin $(BOOT_DIR)
 	@if [ ! -f "$(GRUB_DIR)/grub.cfg" ]; then \
-		echo "menuentry \"$(OSNAME)\" {\n\tmultiboot /boot/kernal.bin\n}" > $(GRUB_DIR)/grub.cfg; \
+		echo "$$GRUB_CFG" > $(GRUB_DIR)/grub.cfg; \
 	fi
 	grub-mkrescue -o $(ISO_DIR)/$(OSNAME).iso $(ISO_DIR)
 
