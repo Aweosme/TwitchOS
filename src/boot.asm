@@ -14,7 +14,7 @@ align 4
 	dd	FLAGS
 	dd	CHECKSUM
 
-section .stack, nx		; A stack (We need one, otherwise the C won't work :( )!
+section .bss			; A stack (We need one, otherwise the C won't work :( )!
 align 4				; We might eventually want a bigger stack.
 stack_bottom:
 resb 8192
