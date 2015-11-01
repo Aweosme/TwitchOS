@@ -10,7 +10,6 @@ CC = gcc
 CCARCH = -m32
 CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 CLFLAGS = -nostdlib -lgcc
-
 ASMC = nasm
 ASMCARCH = elf32
 
@@ -23,7 +22,7 @@ ISO_DIR = $(BUILD_DIR)/iso
 BOOT_DIR = $(ISO_DIR)/boot
 GRUB_DIR = $(BOOT_DIR)/grub
 
-
+.PHONY: clean setup_build_directory kernal setup_iso run
 
 _DEPS =
 
@@ -31,17 +30,12 @@ _OBJS = \
 	main.o \
 	boot.o
 
-
-
 ### Build prep
 DEPS = $(patsubst %,$(SRC_DIR)/%,$(_DEPS))
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 
-
-
 ### Build
 all: setup_iso
-
 
 # any .o file from .c file created from the .c file and the list of dependants
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
@@ -51,12 +45,9 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
 	$(ASMC) -f $(ASMCARCH) -o $@ $^
 
+
 kernal.bin: $(OBJS)
 	$(CC) $(CCARCH) -o $(BUILD_DIR)/$@ $^ $(CLFLAGS)
-
-
-
-.PHONY: clean setup_build_directory kernal setup_iso
 
 setup_build_directory:
 	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
@@ -64,7 +55,6 @@ setup_build_directory:
 	@if [ ! -d "$(SRC_DIR)" ]; then mkdir $(SRC_DIR); fi
 
 kernal: setup_build_directory kernal.bin
-
 
 setup_iso: setup_build_directory kernal.bin
 	@if [ ! -d "$(ISO_DIR)" ]; then mkdir $(ISO_DIR); fi
@@ -77,8 +67,12 @@ setup_iso: setup_build_directory kernal.bin
 	fi
 	grub-mkrescue -o $(ISO_DIR)/$(OSNAME).iso $(ISO_DIR)
 
-
 clean:
 	@rm -f $(OBJ_DIR)/*.o
 	@rm -f $(BUILD_DIR)/*.bin
 	@rm -rf $(ISO_DIR)
+	@rm -rf $(BUILD_DIR)
+	@rm -rf $(OBJ_DIR)
+
+run: setup_iso
+	@qemu-system-i386 -m 256M -cdrom $(ISO_DIR)/$(OSNAME).iso -k en-us
