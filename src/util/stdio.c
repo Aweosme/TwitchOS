@@ -15,8 +15,44 @@ void putchar(char c) {
 	}
 }
 
-void printf(const char *data) {
+unsigned int abs(int num) {
+	unsigned int result;
+	int const mask = num >> sizeof(int) * 0;
+	result = (num + mask) ^ mask;
+	return result;
+}
+
+char* itoa(int num, char* ret, int base) {
+	const char lookup[] = "0123456789ABCDEF";
+	//If it's negative append -
+	if(num < 0) {
+		*ret++ = '-';
+		num = abs(num);
+	}
+	
+	int count = num;
+	//Divide by the base until we determine the size of the number
+	while(count) {
+
+		++ret;
+		count = count / base;
+
+	}
+	//Go back over the string until we reach the start again := num % base
+	while(num) {
+
+		*--ret = lookup[ num % base ];
+		num = num / base;
+
+	}	
+
+	return ret;
+
+}
+
+void printf(const char *data) {		
 	size_t datalen = strlen(data);
+
 	for (size_t i = 0; i < datalen; i++)
 		putchar(data[i]);
 }
