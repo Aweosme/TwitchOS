@@ -52,8 +52,8 @@ void init_gdt()
 	gdt_set_entry(0, 0, 0, 0, 0);				 // NULL segment
 	gdt_set_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Kernel code segment
 	gdt_set_entry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Kernel data segment
-	gdt_set_entry(2, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User code segment
-	gdt_set_entry(2, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User data segment
+	gdt_set_entry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User code segment
+	gdt_set_entry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User data segment
 
 	/* Set new gdt */
 	gdt_flush();
