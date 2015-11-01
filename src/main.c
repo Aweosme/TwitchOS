@@ -1,6 +1,12 @@
 #include <stddef.h> /* Almost forgot to add these essential headers! */
 #include <stdint.h> /* We can include these because they come with the compiler */
 
+/* Yay for defining true and false */
+typedef enum
+{
+	true=1, false=0
+}bool;
+
 /* Hardware text mode color constants. */
 enum vga_color { /* Why does an _ENUM_ need = 0x0..0xF, it's guaranteed to start at 0 and increment by 1*/
 	COLOR_BLACK,
@@ -25,6 +31,7 @@ enum vga_color { /* Why does an _ENUM_ need = 0x0..0xF, it's guaranteed to start
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
 
+
 uint8_t make_color(enum vga_color fg, enum vga_color bg) { /* This is how we can make our awesome 16 terminal colors yay */
 	return fg | bg << 4;
 }
@@ -40,6 +47,21 @@ size_t strlen(const char* str) { /* There are no standard libraries, we do every
 	while(str[ret] != 0)
 		ret++;
 	return ret;
+}
+
+void *memcpy(void *dest, const void *src, int count)
+{
+    const char *sp = (const char *)src;
+    char *dp = (char *)dest;
+    for(; count != 0; count--) *dp++ = *sp++;
+    return dest;
+}
+
+void *memset(void *dest, char val, int count)
+{
+    char *temp = (char *)dest;
+    for( ; count != 0; count--) *temp++ = val;
+    return dest;
 }
 
 size_t terminal_row;
@@ -79,6 +101,19 @@ void clearscreen() {
 	terminal_column = 0;
 }
 
+void setcursorpos(int x, int y) {
+	terminal_row = x;
+	terminal_column = y;
+}
+
+void scrolldown() {
+	memcpy(terminal_buffer, terminal_buffer + 80, sizeof(uint16_t) * VGA_WIDTH * (VGA_HEIGHT-1));
+	for(int i = 80*24; i < (80*25); i++) {
+		terminal_buffer[i] = make_vgaentry(' ', terminal_color);
+	}	
+}
+
+
 void putchar(char c) {
 	if(c == '\n') {
 		terminal_row++;
@@ -91,6 +126,13 @@ void putchar(char c) {
 				terminal_row = 0;
 			}
 		}
+	}
+}
+
+//THIS IS BAD :(
+void sleep(unsigned long delay) {
+	for(unsigned long i = 0; i < delay; i++) {
+		__asm__ __volatile__ ("nop");
 	}
 }
 
@@ -118,8 +160,18 @@ int kernel_main() {
 	printf("    (       |   |' \\  `--.\n");
 	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
+//	clearscreen();
+	int count = 0;
+	while(count < 5) {
+		sleep(100000000);
+		scrolldown();
+		count++;
+	
+	}
+
 	clearscreen();
 	printf("Exiting...");
+
 
 
 
