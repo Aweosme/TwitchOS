@@ -1,6 +1,5 @@
-# TwitchOS
+# TwitchOS [![Join the chat at https://gitter.im/DonkeyCore/TwitchOS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/DonkeyCore/TwitchOS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Join the chat at https://gitter.im/DonkeyCore/TwitchOS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/DonkeyCore/TwitchOS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 TwitchOS, made by some bored Twitch users
 
 # What does it do?
