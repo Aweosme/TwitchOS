@@ -9,4 +9,19 @@
  */
 size_t strlen(const char *str);
 
+/**
+ * Copies a block of memory from one location to another
+ */
+void *memcpy(void *dest, const void *src, int count);
+
+/**
+ * Sets a block of memory to a single value
+ */
+void *memset(void *dest, char val, int count);
+
+/**
+ * Moves a block of memory from one location to another
+ */
+void* memmove(void* dest, const void* src, size_t num);
+
 #endif //TWITCHOS_STRING_H

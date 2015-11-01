@@ -57,4 +57,12 @@ uint16_t make_vgaentry(char, uint8_t);
  */
 void putentryat(char, uint8_t, size_t, size_t);
 
+void clearscreen();
+
+void setcursorpos(int x, int y);
+
+void scrolldown();
+
+void scrollup();
+
 #endif //TWITCHOS_VIDEO_H

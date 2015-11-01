@@ -3,21 +3,26 @@
 #
 # NOTE(sdsmith): made to be run in root of project directory.
 
-### Config 
-CC=gcc
-CCARCH=-m32
-CFLAGS=-std=gnu99 -ffreestanding -O2 -Wall -Wextra
-CLFLAGS=-nostdlib -lgcc
+### Config
+OSNAME = aweosme
 
-ASMC=nasm
-ASMCARCH=elf32
-
-
-BUILD_DIR=./build
-OBJ_DIR=./build/obj
-SRC_DIR=./src
+CC = gcc
+CCARCH = -m32
+CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+CLFLAGS = -nostdlib -lgcc
+ASMC = nasm
+ASMCARCH = elf32
 
 
+BUILD_DIR = ./build
+OBJ_DIR = $(BUILD_DIR)/obj
+SRC_DIR = ./src
+
+ISO_DIR = $(BUILD_DIR)/iso
+BOOT_DIR = $(ISO_DIR)/boot
+GRUB_DIR = $(BOOT_DIR)/grub
+
+.PHONY: clean setup_build_directory kernal setup_iso run
 
 _DEPS =
 
@@ -28,17 +33,12 @@ _OBJS = \
 	util/string.o \
 	util/stdio.o
 
-
-
 ### Build prep
 DEPS = $(patsubst %,$(SRC_DIR)/%,$(_DEPS))
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 
-
-
 ### Build
-all: directories kernal.bin
-
+all: setup_iso
 
 # any .o file from .c file created from the .c file and the list of dependants
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
@@ -53,15 +53,30 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
 kernal.bin: $(OBJS)
 	$(CC) $(CCARCH) -o $(BUILD_DIR)/$@ $^ $(CLFLAGS)
 
+setup_build_directory:
+	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
+	@if [ ! -d "$(OBJ_DIR)" ]; then mkdir $(OBJ_DIR); fi
+	@if [ ! -d "$(SRC_DIR)" ]; then mkdir $(SRC_DIR); fi
 
+kernal: setup_build_directory kernal.bin
 
-.PHONY: clean directories
+setup_iso: setup_build_directory kernal.bin
+	@if [ ! -d "$(ISO_DIR)" ]; then mkdir $(ISO_DIR); fi
+	@if [ ! -d "$(BOOT_DIR)" ]; then mkdir $(BOOT_DIR); fi
+	@if [ ! -d "$(GRUB_DIR)" ]; then mkdir $(GRUB_DIR); fi
 
-directories:
-	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
-	if [ ! -d "$(OBJ_DIR)" ]; then mkdir $(OBJ_DIR); fi
-	if [ ! -d "$(SRC_DIR)" ]; then mkdir $(SRC_DIR); fi
-
+	cp $(BUILD_DIR)/kernal.bin $(BOOT_DIR)
+	@if [ ! -f "$(GRUB_DIR)/grub.cfg" ]; then \
+		echo "menuentry \"$(OSNAME)\" {\n\tmultiboot /boot/kernal.bin\n}" > $(GRUB_DIR)/grub.cfg; \
+	fi
+	grub-mkrescue -o $(ISO_DIR)/$(OSNAME).iso $(ISO_DIR)
 
 clean:
-	rm -f $(OBJ_DIR)/*.o
+	@rm -f $(OBJ_DIR)/*.o
+	@rm -f $(BUILD_DIR)/*.bin
+	@rm -rf $(ISO_DIR)
+	@rm -rf $(BUILD_DIR)
+	@rm -rf $(OBJ_DIR)
+
+run: setup_iso
+	@qemu-system-i386 -m 256M -cdrom $(ISO_DIR)/$(OSNAME).iso -k en-us
