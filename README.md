@@ -13,6 +13,6 @@ Thank you to these beautiful people who contributed:
 * Arch-TK
 * DonkeyCore
 * kieranellis
-* Outlasted
 * ob6160
+* Outlasted
 * sdsmith
