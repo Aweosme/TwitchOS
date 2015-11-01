@@ -22,6 +22,6 @@ char* itoa(int num, char* ret, int base);
 /**
  * Return the absolute value of an integer
  */
-unsigned int abs(int num);
+int abs(int num);
   
 #endif //TWITCHOS_STDIO_H
