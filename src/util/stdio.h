@@ -17,11 +17,11 @@ void printf(const char *);
 /**
  * Convert integer to string
  */
-char* itoa(int num, char* ret, int base)
+char* itoa(int num, char* ret, int base);
 
 /**
  * Return the absolute value of an integer
  */
-unsigned int abs(int num) {
+unsigned int abs(int num);
   
 #endif //TWITCHOS_STDIO_H
