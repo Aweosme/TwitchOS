@@ -1,11 +1,7 @@
 #include <stddef.h> /* Almost forgot to add these essential headers! */
 #include <stdint.h> /* We can include these because they come with the compiler */
-
-/* Yay for defining true and false */
-typedef enum
-{
-	true=1, false=0
-}bool;
+#define true 1
+#define false 0
 
 /* Hardware text mode color constants. */
 enum vga_color { /* Why does an _ENUM_ need = 0x0..0xF, it's guaranteed to start at 0 and increment by 1*/
