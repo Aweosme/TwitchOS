@@ -30,8 +30,10 @@ _OBJS = \
 	main.o \
 	boot.o \
 	video.o \
-	mem/gdt.o \
-	mem/gdt_flush.o \
+	descriptor_tables/gdt.o \
+	descriptor_tables/gdt_flush.o \
+	descriptor_tables/idt.o \
+	descriptor_tables/idt_flush.o \
 	util/string.o \
 	util/stdio.o
 
