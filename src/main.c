@@ -18,9 +18,11 @@ int kernel_main() {
 	init_gdt();
 	init_idt();
 	init_video();
-
-	printf("Hello, World!\n\n");
-	printf("Puppy:\n\n");
+	
+	setcolor(make_color(COLOR_GREEN, COLOR_BLACK));
+	printf("Hello, World!");
+	newline(5);
+	setcolor(make_color(COLOR_ORANGE, COLOR_BLACK));
 	printf("                          ,--.\n");
 	printf("                   _/ <`-'\n");
 	printf("               ,-.' \\--\\_\n");
@@ -35,9 +37,15 @@ int kernel_main() {
 	printf("    (       |   |' \\  `--.\n");
 	printf("(%--'\\   ,--.\\   `-.`-._)))\n");
 	printf(" `---'`-/__)))`-._)))\n\n");
-//	clearscreen();
 
-    int count = 0;
+	int count = 0;
+	
+	//Some delay before bouncing
+	while (count < 10) {
+            sleep(100000000);
+            count++;
+        }
+	count = 0;
     while (true) {
 
         while (count < 5) {

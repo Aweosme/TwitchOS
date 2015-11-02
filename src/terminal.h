@@ -43,9 +43,14 @@ void init_video();
 void init_video_with_colors(enum vga_color, enum vga_color);
 
 /**
- * Set terminal colors using vga_color enum
+ * Create terminal colors using vga_color enum
  */
 uint8_t make_color(enum vga_color, enum vga_color);
+
+/**
+ * Set terminal colors
+ */
+void setcolor(uint8_t);
 
 /**
  * Return a 16 bit number that represents a character and the terminal color
@@ -57,9 +62,14 @@ uint16_t make_vgaentry(char, uint8_t);
  */
 void putentryat(char, uint8_t, size_t, size_t);
 
+/**
+ * Print out the specified number of newlines
+ */
+void newline(unsigned int);
+
 void clearscreen();
 
-void setcursorpos(int x, int y);
+void setcursorpos(int, int);
 
 void scrolldown();
 
