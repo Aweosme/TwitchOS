@@ -4,3 +4,6 @@ build/
 
 # Clion
 .idea/
+
+# Vagrant directory
+.vagrant/
